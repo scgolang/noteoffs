@@ -1,0 +1,21 @@
+{
+	"ImportPath": "github.com/scgolang/noteoffs",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
+	"Deps": [
+		{
+			"ImportPath": "github.com/pkg/errors",
+			"Comment": "v0.8.0-5-gc605e28",
+			"Rev": "c605e284fe17294bda444b34710735b29d1a9d90"
+		},
+		{
+			"ImportPath": "github.com/rakyll/portmidi",
+			"Rev": "1246dd47c56089ea2ae791266edb7f4c6b90c045"
+		},
+		{
+			"ImportPath": "github.com/scgolang/midi",
+			"Comment": "v0.2.0-7-g99f2ca9",
+			"Rev": "99f2ca9509978e87636f78fc523aadeb137cdec4"
+		}
+	]
+}
