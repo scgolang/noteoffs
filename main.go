@@ -34,27 +34,34 @@ func main() {
 		die(err)
 	}
 	var (
-		ctx   = context.Background()
-		notes = map[byte]time.Time{}
-		tk    = time.NewTicker(20 * time.Millisecond)
+		ctx     = context.Background()
+		notes   = map[byte]time.Time{}
+		tk      = time.NewTicker(20 * time.Millisecond)
+		waiting = time.NewTicker(10 * time.Second)
 	)
 	for {
 		select {
 		case <-ctx.Done():
 			die(ctx.Err())
-		case pkt := <-packets:
-			if pkt.Err != nil {
-				die(pkt.Err)
-			}
-			if debug {
-				fmt.Printf("%#v\n", pkt.Data)
-				continue
-			}
-			switch pkt.Data[0] {
-			case 0x90:
-				notes[pkt.Data[1]] = time.Now() // Note On
-			case 0x80:
-				notes[pkt.Data[1]] = time.Time{} // Note Off
+		case <-waiting.C:
+			die(errors.New("timeout waiting for data"))
+		case pkts := <-packets:
+			waiting.Stop()
+
+			for _, pkt := range pkts {
+				if pkt.Err != nil {
+					die(pkt.Err)
+				}
+				if debug {
+					fmt.Printf("%#v\n", pkt.Data)
+					continue
+				}
+				switch pkt.Data[0] {
+				case 0x90:
+					notes[pkt.Data[1]] = time.Now() // Note On
+				case 0x80:
+					notes[pkt.Data[1]] = time.Time{} // Note Off
+				}
 			}
 		case <-tk.C:
 			notes = check(notes, timeout)
@@ -88,7 +95,7 @@ func die(err error) {
 	os.Exit(1)
 }
 
-func getPacketChan(deviceName string) (<-chan midi.Packet, error) {
+func getPacketChan(deviceName string) (<-chan []midi.Packet, error) {
 	devices, err := midi.Devices()
 	if err != nil {
 		return nil, err
@@ -96,7 +103,6 @@ func getPacketChan(deviceName string) (<-chan midi.Packet, error) {
 	var device *midi.Device
 
 	for _, d := range devices {
-		println(d.Name)
 		if strings.Contains(strings.ToLower(d.Name), deviceName) {
 			device = d
 			break
